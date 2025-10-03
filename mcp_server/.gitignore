@@ -1,0 +1,14 @@
+# Environment variables (contains sensitive data)
+.env
+
+# Log files
+logs/
+*.log
+
+# Docker volumes
+volumes/
+
+# OS files
+.DS_Store
+Thumbs.db
+

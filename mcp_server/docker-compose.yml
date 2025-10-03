@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mongodb-mcp-server:
+    image: mongodb/mongodb-mcp-server:latest
+    container_name: mongodb-mcp-server
+    stdin_open: true
+    tty: true
+    environment:
+      - MDB_MCP_CONNECTION_STRING=${MDB_MCP_CONNECTION_STRING}
+      - MDB_MCP_READ_ONLY=${MDB_MCP_READ_ONLY:-true}
+    command: ["--transport", "http", "--httpHost", "0.0.0.0", "--httpPort", "3000"]
+    ports:
+      - "3000:3000"
+
