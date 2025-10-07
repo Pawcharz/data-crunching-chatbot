@@ -12,3 +12,5 @@ services:
     command: ["--transport", "http", "--httpHost", "0.0.0.0", "--httpPort", "3000"]
     ports:
       - "3000:3000"
+
+
