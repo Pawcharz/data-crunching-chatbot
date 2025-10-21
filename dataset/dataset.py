@@ -9,20 +9,20 @@ from pydantic_evals import Case, Dataset
 from pydantic_evals.evaluators import Evaluator, EvaluatorContext
 from mongodb_agent import MongoDBAgent
 
-today = "2025-05-26"
+today = "2025-10-09"
 
 cases = [
     Case(
         name='check_ins_today_id',
-        inputs='Show all visitors who checked in today (today is {today}) with Emirates ID 60ae050577dba90011862e03.',
+        inputs='Show all visitors who checked in today (today is {today}) with Emirates ID 68e76c77087ed400125e9285.',
         expected_output={
           "collection": "events",
           "filter": {
-          "type": "enterEvents",
-          "_id":  {"$oid": "60ae050577dba90011862e03"},
-          "date": {
-            "$gte": "ISODate('2020-05-26')",
-            "$lt": "ISODate('2020-05-27')"
+            "type": "enterEvents",
+            "_id":  "ObjectId('68e76c77087ed400125e9285')",
+            "date": {
+              "$gte": "ISODate('2020-10-09')",
+              "$lt": "ISODate('2020-10-10')"
             }
           }
         },
@@ -34,11 +34,11 @@ cases = [
         expected_output={
           "collection": "events",
           "filter": {
-          "type": "leaveEvents",
-          "_id": {"$oid": "60ae057577dba90011862e0a"},
-          "date": {
-            "$gte": "ISODate('2025-05-26')",
-            "$lt": "ISODate('2025-05-27')"
+            "type": "leaveEvents",
+            "_id": {"$oid": "60ae057577dba90011862e0a"},
+            "date": {
+              "$gte": "ISODate('2025-05-26')",
+              "$lt": "ISODate('2025-05-27')"
             }
           }
         },

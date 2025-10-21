@@ -9,6 +9,9 @@ This dataset captures the full interaction flow including:
 
 import datetime
 import sys
+import asyncio
+import inspect
+import json
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -16,21 +19,21 @@ from typing import List, Dict, Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pydantic_evals import Case, Dataset
-from pydantic_evals.evaluators import Evaluator, EvaluatorContext
+from pydantic_evals.evaluators import Evaluator, EvaluatorContext, LLMJudge
 from mongodb_agent import MongoDBAgent
 
-today = "2025-05-26"
+today = "2025-10-09"
 
 # Conversation-based test cases
 cases = [
     Case(
-        name='check_ins_today_qr_code',
-        inputs='Show all visitors who checked in using QR code today (today is 2025-05-26).',
+        name='check_ins_today_id',
+        inputs=f'Show all visitors who checked in today (today is {today}) with Emirates ID 68e76c77087ed400125e9285.',
         expected_output={
             "conversation": [
                 {
                     "role": "user",
-                    "content": "Show all visitors who checked in using QR code today (today is 2025-05-26)."
+                    "content": "Show all visitors who checked in today (today is {today}) with Emirates ID 68e76c77087ed400125e9285."
                 },
                 {
                     "role": "tool_call",
@@ -39,7 +42,6 @@ cases = [
                         "database": "buzzin-api-staging",
                         "collection": "events"
                     },
-                    "optional": True  # Agent may or may not call this
                 },
                 {
                     "role": "tool_call",
@@ -49,19 +51,17 @@ cases = [
                         "collection": "events",
                         "filter": {
                             "type": "enterEvents",
-                            "entryType": "qrCode",
+                            "_id":  "ObjectId('68e76c77087ed400125e9285')",
                             "date": {
-                                "$gte": {"$date": "2025-05-26T00:00:00.000Z"},
-                                "$lt": {"$date": "2025-05-27T00:00:00.000Z"}
+                                "$gte": "ISODate('2020-10-09')",
+                                "$lt": "ISODate('2020-10-10')"
                             }
                         }
                     },
-                    "required_fields": ["type", "entryType", "date"]
                 },
                 {
                     "role": "assistant",
-                    "content_must_include": ["visitor", "QR code", "check", "today"],
-                    "content_must_not_include": ["error", "failed"]
+                    "content": "The visitor with Emirates ID 68e76c77087ed400125e9285 who checked in today is SHAJAHAN ABDULR MOHAMMEDKUNHI."
                 }
             ]
         },
@@ -225,125 +225,83 @@ cases = [
     ),
 ]
 
-
-class ConversationEvaluator(Evaluator[dict, dict]):
+class VerboseLLMJudge(LLMJudge):
     """
-    Evaluator that checks conversation flow including:
-    - Tool calls made
-    - Filter structure in tool calls
-    - Agent's textual response quality
+    LLMJudge that prints what data it receives and its evaluation results.
     """
-    
-    def _check_tool_call(self, expected_tool, actual_iterations):
-        """Check if expected tool was called with correct arguments."""
-        if expected_tool.get("optional", False):
-            return 1.0  # Optional tools don't affect score
-        
-        required_fields = expected_tool.get("required_fields", [])
-        tool_name = expected_tool.get("tool")
-        expected_filter = expected_tool.get("arguments", {}).get("filter", {})
-        
-        # Search through all iterations for matching tool call
-        for iteration in actual_iterations:
-            for tool_call in iteration.get("tool_calls", []):
-                if tool_call.get("name") == tool_name:
-                    actual_args = tool_call.get("arguments", {})
-                    actual_filter = actual_args.get("filter", {})
-                    
-                    # Check required fields are present
-                    score = 0
-                    for field in required_fields:
-                        if field in actual_filter:
-                            # Check if value matches or is reasonable
-                            if field in expected_filter:
-                                if self._compare_values(expected_filter[field], actual_filter[field]):
-                                    score += 1
-                            else:
-                                score += 1  # Field present, no specific value required
-                    
-                    return score / len(required_fields) if required_fields else 1.0
-        
-        return 0.0  # Tool not called
-    
-    def _compare_values(self, expected, actual):
-        """Compare values with some flexibility."""
-        if expected == actual:
-            return True
-        
-        # For dates, just check structure is correct
-        if isinstance(expected, dict) and "$date" in expected:
-            return isinstance(actual, dict) and "$date" in actual
-        
-        # For ObjectIds
-        if isinstance(expected, dict) and "$oid" in expected:
-            return isinstance(actual, dict) and "$oid" in actual
-        
-        # For nested dicts
-        if isinstance(expected, dict) and isinstance(actual, dict):
-            return all(k in actual for k in expected.keys())
-        
-        return False
-    
-    def _check_assistant_response(self, expected_response, actual_iterations):
-        """Check if agent's final response meets criteria."""
-        # Get final answer from last iteration
-        final_answer = None
-        for iteration in reversed(actual_iterations):
-            if iteration.get("final_answer"):
-                final_answer = iteration["final_answer"]
-                break
-        
-        if not final_answer:
-            return 0.0
-        
-        final_answer_lower = final_answer.lower()
-        
-        # Check must include
-        must_include = expected_response.get("content_must_include", [])
-        include_score = sum(1 for phrase in must_include if phrase.lower() in final_answer_lower)
-        include_score = include_score / len(must_include) if must_include else 1.0
-        
-        # Check must not include
-        must_not_include = expected_response.get("content_must_not_include", [])
-        exclude_score = sum(1 for phrase in must_not_include if phrase.lower() not in final_answer_lower)
-        exclude_score = exclude_score / len(must_not_include) if must_not_include else 1.0
-        
-        return (include_score + exclude_score) / 2
-    
-    def evaluate(self, ctx: EvaluatorContext[dict, dict]) -> float:
-        """
-        Evaluate the conversation flow.
-        ctx.output should contain the iterations from the agent.
-        ctx.expected_output contains the expected conversation structure.
-        """
-        if not ctx.output or not ctx.expected_output:
-            return 0.0
-        
-        actual_iterations = ctx.output.get("iterations", [])
-        expected_conversation = ctx.expected_output.get("conversation", [])
 
-        print('actual_iterations: ', actual_iterations)
-        print('expected_conversation: ', expected_conversation)
+    async def evaluate(self, ctx: EvaluatorContext) -> float:
+        """Override evaluate to add debug logging."""
+        print("\n" + "=" * 80)
+        print("DEBUG: DATA RECEIVED BY LLM JUDGE")
+        print("=" * 80)
         
-        if not actual_iterations or not expected_conversation:
-            return 0.0
+        print("\n[INPUTS]:")
+        print(f"  Type: {type(ctx.inputs)}")
+        print(f"  Value: {ctx.inputs}")
         
-        scores = []
+        print("\n[OUTPUT from ai_mongo_conversation]:")
+        print(f"  Type: {type(ctx.output)}")
+        if isinstance(ctx.output, dict):
+            print(f"  Keys: {list(ctx.output.keys())}")
+            print("\n  Content:")
+            for key, value in ctx.output.items():
+                if key == 'iterations':
+                    print(f"    {key}: {len(value)} iterations")
+                    for i, iteration in enumerate(value, 1):
+                        print(f"      Iteration {i}:")
+                        print(f"        - tool_calls: {len(iteration.get('tool_calls', []))}")
+                        if iteration.get('final_answer'):
+                            print(f"        - final_answer: {iteration.get('final_answer')[:100]}...")
+                elif key == 'final_answer':
+                    print(f"    {key}: {value}")
+                else:
+                    print(f"    {key}: {value}")
+        else:
+            print(f"  Value: {ctx.output}")
         
-        # Evaluate tool calls
-        for turn in expected_conversation:
-            if turn.get("role") == "tool_call":
-                score = self._check_tool_call(turn, actual_iterations)
-                scores.append(score)
-            elif turn.get("role") == "assistant":
-                score = self._check_assistant_response(turn, actual_iterations)
-                scores.append(score)
+        print("\n[EXPECTED_OUTPUT]:")
+        print(f"  Type: {type(ctx.expected_output)}")
+        if isinstance(ctx.expected_output, dict):
+            print(f"  Keys: {list(ctx.expected_output.keys())}")
+            if 'conversation' in ctx.expected_output:
+                conv = ctx.expected_output['conversation']
+                print(f"  Conversation has {len(conv)} steps")
+                for i, step in enumerate(conv, 1):
+                    role = step.get('role', 'unknown')
+                    print(f"    Step {i} - {role}:")
+                    if role == 'assistant':
+                        print(f"      Expected content: {step.get('content', 'N/A')}")
+                    elif role == 'tool_call':
+                        print(f"      Tool: {step.get('tool', 'N/A')}")
+                        print(f"      Tool arguments: {step.get('arguments', 'N/A')}")
+        else:
+            print(f"  Value: {ctx.expected_output}")
         
-        return sum(scores) / len(scores) if scores else 0.0
-
+        print("\n" + "=" * 80)
+        print("CALLING PARENT LLMJudge.evaluate()...")
+        print("=" * 80)
+        
+        # Call the parent evaluate method
+        score = await super().evaluate(ctx)
+        
+        print("\n" + "=" * 80)
+        print("LLM JUDGE RESULT")
+        print("=" * 80)
+        print(f"Score: {score}")
+        print("=" * 80 + "\n")
+        
+        return score
 
 # Create dataset with conversation-based evaluator
-dataset = Dataset(cases=cases[:1], evaluators=[ConversationEvaluator()])
+dataset = Dataset(cases=cases[:1], 
+    evaluators=[VerboseLLMJudge(
+        rubric="Output and Expected Output should represent the same answer, even if the tool calls don't match exactly, the final assistant answer must be simillar and explaining the same info",
+        model="openai:gpt-4o-mini",
+        include_input=True,
+        include_expected_output=True
+    )]
+)
 
 
 # Wrapper function for evaluation
