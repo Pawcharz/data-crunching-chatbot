@@ -27,6 +27,13 @@ if env_path.exists():
 else:
     load_dotenv()
 
+import logfire
+
+from pydantic_ai import Agent
+
+logfire.configure()  
+logfire.instrument_pydantic_ai()
+
 
 def main():
     print("=" * 80)

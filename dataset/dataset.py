@@ -14,7 +14,7 @@ today = "2025-10-09"
 cases = [
     Case(
         name='check_ins_today_id',
-        inputs='Show all visitors who checked in today (today is {today}) with Emirates ID 68e76c77087ed400125e9285.',
+        inputs=f'Show all visitors who checked in today (today is {today}) with Emirates ID 68e76c77087ed400125e9285.',
         expected_output={
           "collection": "events",
           "filter": {
@@ -46,7 +46,7 @@ cases = [
     ),
     Case(
         name='check_ins_yesterday_eid_unit_name',
-        inputs='Provide details of visitor John Doe who checked in using Emirates ID at unit 123 yesterday (today is {today})',
+        inputs=f'Provide details of visitor John Doe who checked in using Emirates ID at unit 123 yesterday (today is {today})',
         expected_output={
             "collection": "events",
             "filter": {
@@ -63,7 +63,7 @@ cases = [
     ),
     Case( # Report is more complex and requires multiple queries
         name='check_ins_last_month_eid_unit_report',
-        inputs='Give a report of check-ins for Emirates ID 784512369012347 at unit 456 last month (today is {today}).',
+        inputs=f'Give a report of check-ins for Emirates ID 784512369012347 at unit 456 last month (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -80,7 +80,7 @@ cases = [
     ),
     Case(
         name='check_ins_today_qr_code_all_visitors',
-        inputs='Show all visitors who checked in using QR code today (today is {today}).',
+        inputs=f'Show all visitors who checked in using QR code today (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -96,7 +96,7 @@ cases = [
     ),
     Case(
         name='check_outs_yesterday_qr_code_all_visitors',
-        inputs='List all visitors who checked out using QR code yesterday (today is {today}).',
+        inputs=f'List all visitors who checked out using QR code yesterday (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -112,7 +112,7 @@ cases = [
     ),
     Case(
         name='check_ins_yesterday_qr_code_name_unit',
-        inputs='Provide details of visitor Jane Smith who checked in with QR code at unit 123 yesterday (today is {today}).',
+        inputs=f'Provide details of visitor Jane Smith who checked in with QR code at unit 123 yesterday (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -129,7 +129,7 @@ cases = [
     ),
     Case(
         name='check_ins_this_week_qr_code_all_employees',
-        inputs='Which employees checked in using QR code this week? (today is {today})',
+        inputs=f'Which employees checked in using QR code this week? (today is {today})',
         expected_output={
             "collection": "events",
             "filter": {
@@ -145,7 +145,7 @@ cases = [
     ),
     Case(
         name='check_ins_last_month_qr_code_unit_report',
-        inputs='Give a report of QR code check-ins at unit 456 last month (today is {today}).',
+        inputs=f'Give a report of QR code check-ins at unit 456 last month (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -161,7 +161,7 @@ cases = [
     ),
     Case(
         name='check_ins_manual_today_all_users',
-        inputs='Show all users who checked in manually today (today is {today}).',
+        inputs=f'Show all users who checked in manually today (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -177,7 +177,7 @@ cases = [
     ),
     Case(
         name='check_outs_manual_yesterday_all_visitors',
-        inputs='List visitors who checked out manually yesterday (today is {today}).',
+        inputs=f'List visitors who checked out manually yesterday (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -223,7 +223,7 @@ cases = [
     ),
     Case(
         name='check_ins_this_week_manual_all_employees',
-        inputs='Which employees checked in manually this week? (today is {today})',
+        inputs=f'Which employees checked in manually this week? (today is {today})',
         expected_output={
             "collection": "events",
             "filter": {
@@ -239,7 +239,7 @@ cases = [
     ),
     Case(
         name='check_outs_last_month_manual_unit',
-        inputs='Show all manual check-outs for unit 123 last month (today is {today}).',
+        inputs=f'Show all manual check-outs for unit 123 last month (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -258,7 +258,7 @@ cases = [
     # Noon ObjectId: 64e2f3be6e499a001219b0fa
     Case(
         name='deliveries_today_amazon_unit',
-        inputs='Show all Amazon deliveries received at unit 123 today (today is {today}).',
+        inputs=f'Show all Amazon deliveries received at unit 123 today (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -274,7 +274,7 @@ cases = [
     ),
     Case(
         name='deliveries_date_noon_unit',
-        inputs='List all Noon deliveries made to unit 456 on 05/10/2025.',
+        inputs=f'List all Noon deliveries made to unit 456 on 05/10/2025.',
         expected_output={
             "collection": "events",
             "filter": {
@@ -290,7 +290,7 @@ cases = [
     ),
     Case(
         name='deliveries_last_week_amazon_name_unit',
-        inputs='Provide details of Amazon deliveries for visitor John Doe at unit 123 last week (today is {today}).',
+        inputs=f'Provide details of Amazon deliveries for visitor John Doe at unit 123 last week (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -307,7 +307,7 @@ cases = [
     ),
     Case(
         name='deliveries_this_month_dhl_name',
-        inputs='Which deliveries were made by DHL for visitor Jane Smith this month? (today is {today})',
+        inputs=f'Which deliveries were made by DHL for visitor Jane Smith this month? (today is {today})',
         expected_output={
             "collection": "events",
             "filter": {
@@ -323,7 +323,7 @@ cases = [
     ),
     Case(
         name='deliveries_date_range_noon_unit_report',
-        inputs='Give a report of Noon deliveries received at unit 789 between 01/10/2025 and 05/10/2025.',
+        inputs=f'Give a report of Noon deliveries received at unit 789 between 01/10/2025 and 05/10/2025.',
         expected_output={
             "collection": "events",
             "filter": {
@@ -340,7 +340,7 @@ cases = [
     # Filter by Extra Field
     Case(
         name='check_ins_all_extra_company_purpose',
-        inputs='Show all visitors where Company Name is ABC Corp and Purpose of Visit is \'Maintenance\' (today is {today}).',
+        inputs=f'Show all visitors where Company Name is ABC Corp and Purpose of Visit is \'Maintenance\' (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -353,7 +353,7 @@ cases = [
     ),
     Case(
         name='check_ins_all_extra_badge_company',
-        inputs='List all check-ins where Badge No. is B12345 and Company Name is XYZ Ltd (today is {today}).',
+        inputs=f'List all check-ins where Badge No. is B12345 and Company Name is XYZ Ltd (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -366,7 +366,7 @@ cases = [
     ),
     Case(
         name='check_ins_manual_extra_purpose_company',
-        inputs='Provide details of manual check-ins where Purpose of Visit is \'Inspection\' and Company Name is DEF Ltd (today is {today}).',
+        inputs=f'Provide details of manual check-ins where Purpose of Visit is \'Inspection\' and Company Name is DEF Ltd (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -380,7 +380,7 @@ cases = [
     ),
     Case(
         name='deliveries_all_extra_company_purpose',
-        inputs='Show all deliveries where Company Name is ABC Corp and Purpose of Visit is \'Sample Collection\' (today is {today}).',
+        inputs=f'Show all deliveries where Company Name is ABC Corp and Purpose of Visit is \'Sample Collection\' (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -393,7 +393,7 @@ cases = [
     ),
     Case(
         name='check_ins_qr_code_extra_badge_purpose_report',
-        inputs='Give a report of QR code check-ins where Badge No. is Q98765 and Purpose of Visit is \'Delivery\' (today is {today}).',
+        inputs=f'Give a report of QR code check-ins where Badge No. is Q98765 and Purpose of Visit is \'Delivery\' (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -407,7 +407,7 @@ cases = [
     ),
     Case(
         name='check_ins_eid_extra_company_badge',
-        inputs='List all Emirates ID check-ins where Company Name is XYZ Ltd and Badge No. is E12345 (today is {today}).',
+        inputs=f'List all Emirates ID check-ins where Company Name is XYZ Ltd and Badge No. is E12345 (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -421,7 +421,7 @@ cases = [
     ),
     Case(
         name='check_outs_manual_extra_purpose_company',
-        inputs='Show manual check-outs where Purpose of Visit is \'Training\' and Company Name is LMN Ltd (today is {today}).',
+        inputs=f'Show manual check-outs where Purpose of Visit is \'Training\' and Company Name is LMN Ltd (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -435,7 +435,7 @@ cases = [
     ),
     Case(
         name='deliveries_all_extra_badge_company',
-        inputs='Provide all deliveries where Badge No. is D12345 and Company Name is ABC Corp (today is {today}).',
+        inputs=f'Provide all deliveries where Badge No. is D12345 and Company Name is ABC Corp (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -448,7 +448,7 @@ cases = [
     ),
     Case(
         name='check_ins_qr_code_extra_purpose_company',
-        inputs='Show all QR code check-ins where Purpose of Visit is \'Meeting\' and Company Name is XYZ Ltd (today is {today}).',
+        inputs=f'Show all QR code check-ins where Purpose of Visit is \'Meeting\' and Company Name is XYZ Ltd (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -462,7 +462,7 @@ cases = [
     ),
     Case(
         name='check_ins_eid_extra_purpose_badge_report',
-        inputs='Give a report of Emirates ID check-ins where Purpose of Visit is \'Interview\' and Badge No. is E54321 (today is {today}).',
+        inputs=f'Give a report of Emirates ID check-ins where Purpose of Visit is \'Interview\' and Badge No. is E54321 (today is {today}).',
         expected_output={
             "collection": "events",
             "filter": {
@@ -561,12 +561,7 @@ class MongoQueryEvaluator(Evaluator[dict, dict]):
         matched, total = self._compare(ctx.expected_output, ctx.output)
         return matched / total if total > 0 else 0.0
 
-dataset = Dataset(cases=cases[:5], evaluators=[MongoQueryEvaluator()])
-
-# output {'collection': 'events', 'filter': {'entryType': 'qr', 'createdAt': {'$gte': {'$date': '2025-10-20T00:00:00Z'}, '$lt':
-# {'$date': '2025-10-21T00:00:00Z'}}}}
-# expected_output {'collection': 'events', 'filter': {'type': 'enterEvents', 'entryType': 'qrCode', 'date': {'$gte': {'$date':
-# 'today_start'}, '$lt': {'$date': 'today_end'}}}}
+dataset = Dataset(cases=cases, evaluators=[MongoQueryEvaluator()])
 
 # Create AI function wrapper for pydantic_evals
 def ai_mongo_query(user_query: str) -> dict:
@@ -580,9 +575,3 @@ def ai_mongo_query(user_query: str) -> dict:
         "collection": result.get("collection"),
         "filter": result.get("filter")
     }
-
-# Example usage for evaluation:
-# dataset.evaluate_sync(ai_mongo_query)
-# 
-# Or run specific cases:
-# result = ai_mongo_query("Show all visitors who checked in today")

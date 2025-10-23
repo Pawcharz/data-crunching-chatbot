@@ -25,293 +25,443 @@ from mongodb_agent import MongoDBAgent
 today = "2025-10-09"
 
 # Conversation-based test cases
-cases = [
-    Case(
-        name='check_ins_today_id',
-        inputs=f'Show all visitors who checked in today (today is {today}) with Emirates ID 68e76c77087ed400125e9285.',
-        expected_output={
-            "conversation": [
-                {
-                    "role": "user",
-                    "content": "Show all visitors who checked in today (today is {today}) with Emirates ID 68e76c77087ed400125e9285."
+
+
+class DatasetBuilder:
+    def __init__(self, today: str):
+        self.today = datetime.datetime.strptime(today, "%Y-%m-%d")
+
+        today_str = self.today.strftime("%Y-%m-%d (%A)")
+
+        today_start = datetime.datetime.strptime(today, "%Y-%m-%d") # 00:00:00
+        today_end = datetime.datetime.strptime(today, "%Y-%m-%d") + datetime.timedelta(days=1)
+        yesterday_start = today_start - datetime.timedelta(days=1)
+        yesterday_end = today_end - datetime.timedelta(days=1)
+        week_start = today_start - datetime.timedelta(days=today_start.weekday())
+        week_end = week_start + datetime.timedelta(days=7)
+        
+        self.cases = [
+            Case(
+                name='check_ins_today_id',
+                inputs={
+                  "text": f'Show all visitors who checked in today with Emirates ID 68e76c77087ed400125e9285.',
+                  "today_date": '2025-10-09'
                 },
-                {
-                    "role": "tool_call",
-                    "tool": "collection-schema",
-                    "arguments": {
-                        "database": "buzzin-api-staging",
-                        "collection": "events"
-                    },
-                },
-                {
-                    "role": "tool_call",
-                    "tool": "find",
-                    "arguments": {
-                        "database": "buzzin-api-staging",
-                        "collection": "events",
-                        "filter": {
-                            "type": "enterEvents",
-                            "_id":  "ObjectId('68e76c77087ed400125e9285')",
-                            "date": {
-                                "$gte": "ISODate('2020-10-09')",
-                                "$lt": "ISODate('2020-10-10')"
-                            }
-                        }
-                    },
-                },
-                {
-                    "role": "assistant",
-                    "content": "The visitor with Emirates ID 68e76c77087ed400125e9285 who checked in today is SHAJAHAN ABDULR MOHAMMEDKUNHI."
-                }
-            ]
-        },
-        metadata={'difficulty': 'easy'},
-    ),
-    
-    Case(
-        name='check_ins_yesterday_eid_name',
-        inputs='Provide details of visitor John Doe who checked in using Emirates ID yesterday (today is 2025-05-26).',
-        expected_output={
-            "conversation": [
-                {
-                    "role": "user",
-                    "content": "Provide details of visitor John Doe who checked in using Emirates ID yesterday (today is 2025-05-26)."
-                },
-                {
-                    "role": "tool_call",
-                    "tool": "find",
-                    "arguments": {
-                        "database": "buzzin-api-staging",
-                        "collection": "events",
-                        "filter": {
-                            "type": "enterEvents",
-                            "guestName": "John Doe",
-                            "entryType": "eid",
-                            "date": {
-                                "$gte": {"$date": "2025-05-25T00:00:00.000Z"},
-                                "$lt": {"$date": "2025-05-26T00:00:00.000Z"}
-                            }
-                        }
-                    },
-                    "required_fields": ["type", "guestName", "entryType", "date"]
-                },
-                {
-                    "role": "assistant",
-                    "content_must_include": ["John Doe", "Emirates ID", "yesterday"],
-                    "content_must_not_include": ["error"]
-                }
-            ]
-        },
-        metadata={'difficulty': 'easy'},
-    ),
-    
-    Case(
-        name='deliveries_today_amazon',
-        inputs='Show all Amazon deliveries received today (today is 2025-05-26).',
-        expected_output={
-            "conversation": [
-                {
-                    "role": "user",
-                    "content": "Show all Amazon deliveries received today (today is 2025-05-26)."
-                },
-                {
-                    "role": "tool_call",
-                    "tool": "find",
-                    "arguments": {
-                        "database": "buzzin-api-staging",
-                        "collection": "events",
-                        "filter": {
-                            "type": "deliveryEvents",
-                            "companyId": {"$oid": "6159af2a99e90e0013e5f071"},
-                            "date": {
-                                "$gte": {"$date": "2025-05-26T00:00:00.000Z"},
-                                "$lt": {"$date": "2025-05-27T00:00:00.000Z"}
-                            }
-                        }
-                    },
-                    "required_fields": ["type", "companyId", "date"],
-                    "alternatives": [
-                        # Agent might search for company name first
+                expected_output={
+                    "conversation": [
                         {
+                            "role": "tool_call",
+                            "tool": "collection-schema",
+                            "arguments": {
+                                "database": "buzzin-api-staging",
+                                "collection": "events"
+                            },
+                        },
+                        {
+                            "role": "tool_call",
                             "tool": "find",
                             "arguments": {
                                 "database": "buzzin-api-staging",
-                                "collection": "deliverycompanies",
-                                "filter": {"name": {"$regex": "Amazon", "$options": "i"}}
-                            }
+                                "collection": "events",
+                                "filter": {
+                                    "type": "enterEvents",
+                                    "_id":  "68e76c77087ed400125e9285",
+                                    "date": {
+                                        "$gte": "<today - start of day>",
+                                        "$lt": "<today - end of day>"
+                                    }
+                                }
+                            },
+                            "obtained_data": """{
+                                "_id": {
+                                  "$oid": "68e76c77087ed400125e9285"
+                                },
+                                "left": true,
+                                "additionalFlatsIds": [],
+                                "type": "enterEvents",
+                                "flatId": {
+                                  "$oid": "648afc637459670012dc4e1a"
+                                },
+                                "deviceId": {
+                                  "$oid": "60f003b02485680011207c7d"
+                                },
+                                "propertyId": {
+                                  "$oid": "60ae026077dba90011862dfc"
+                                },
+                                "guestName": "SHAJAHAN ABDULR MOHAMMEDKUNHI",
+                                "guestMobileNumber": "+971505117487",
+                                "entryType": "eid",
+                                "emiratesData": {
+                                  "mrzData": {
+                                    "issuing_country": "ARE",
+                                    "dob_readable": "27.06.1994",
+                                    "dob_raw": "940627",
+                                    "raw_result": "ILARE1441202103784199493910329<<<<<<9406270M2703165IND<<<<<<<<<<<4<<<<<<MOHAMMEDKUNHI<<SHAJAHAN<ABDULR<<<<<<",
+                                    "optionals": "784199493910329",
+                                    "expiration_date_raw": "270316",
+                                    "expiration_date_readable": "16.03.2027",
+                                    "nationality": "IND",
+                                    "document_number": "144120210",
+                                    "sex": "M",
+                                    "given_names_readable": "SHAJAHAN ABDULR",
+                                    "surname": "MOHAMMEDKUNHI",
+                                    "document_type_readable": "IL",
+                                    "document_type_raw": "IL"
+                                  }
+                                },
+                                "extraField": "567",
+                                "secondExtraField": "Accounts",
+                                "thirdExtraField": "007",
+                                "isHostMobilePhoneEnter": false,
+                                "message": "SHAJAHAN ABDULR MOHAMMEDKUNHI entered the unit HR",
+                                "date": {
+                                  "$date": "2025-10-09T08:04:07.699Z"
+                                },
+                                "createdAt": {
+                                  "$date": "2025-10-09T08:04:07.700Z"
+                                },
+                                "updatedAt": {
+                                  "$date": "2025-10-10T04:06:13.280Z"
+                                },
+                                "__v": 0
+                              }"""
+                        },
+                        {
+                            "role": "assistant",
+                            "content": "The visitor with Emirates ID 68e76c77087ed400125e9285 who checked in today is SHAJAHAN ABDULR MOHAMMEDKUNHI."
                         }
                     ]
                 },
-                {
-                    "role": "assistant",
-                    "content_must_include": ["Amazon", "deliver", "today"],
-                    "content_must_not_include": ["error"]
-                }
-            ]
-        },
-        metadata={'difficulty': 'medium'},
-    ),
-    
-    Case(
-        name='check_outs_manual_yesterday',
-        inputs='List visitors who checked out manually yesterday (today is 2025-05-26).',
-        expected_output={
-            "conversation": [
-                {
-                    "role": "user",
-                    "content": "List visitors who checked out manually yesterday (today is 2025-05-26)."
+                metadata={'difficulty': 'easy'},
+            ),
+            
+            Case(
+                name='check_ins_yesterday_eid_name',
+                inputs={
+                  "text": f'Provide details of visitor SHAJAHAN ABDULR MOHAMMEDKUNHI who checked in using Emirates ID yesterday.',
+                  "today_date": '2025-09-30'
                 },
-                {
-                    "role": "tool_call",
-                    "tool": "find",
-                    "arguments": {
-                        "database": "buzzin-api-staging",
-                        "collection": "events",
-                        "filter": {
-                            "type": "leaveEvents",
-                            "leaveType": "manualExit",
-                            "date": {
-                                "$gte": {"$date": "2025-05-25T00:00:00.000Z"},
-                                "$lt": {"$date": "2025-05-26T00:00:00.000Z"}
-                            }
+                expected_output={
+                    "conversation": [
+                        {
+                            "role": "tool_call",
+                            "tool": "find",
+                            "arguments": {
+                                "database": "buzzin-api-staging",
+                                "collection": "events",
+                                "filter": {
+                                    "type": "enterEvents",
+                                    "guestName": "SHAJAHAN ABDULR MOHAMMEDKUNHI",
+                                    "entryType": "eid",
+                                    "date": {
+                                        "$gte": "<yesterday - start of day>",
+                                        "$lt": "<yesterday - end of day>"
+                                    }
+                                }
+                            },
+                            "obtained_data": """{
+                                "_id": {
+                                  "$oid": "68da3c285a0387001217efeb"
+                                },
+                                "left": true,
+                                "additionalFlatsIds": [],
+                                "type": "enterEvents",
+                                "flatId": {
+                                  "$oid": "648afc637459670012dc4e16"
+                                },
+                                "deviceId": {
+                                  "$oid": "68a45ec154ddb0bd2803a428"
+                                },
+                                "propertyId": {
+                                  "$oid": "60ae026077dba90011862dfc"
+                                },
+                                "guestId": {
+                                  "$oid": "66e3d7c6662029c070e947e3"
+                                },
+                                "guestName": "SHAJAHAN ABDULR MOHAMMEDKUNHI",
+                                "guestMobileNumber": "+971505117487",
+                                "entryType": "eid",
+                                "emiratesData": {
+                                  "mrzData": {
+                                    "issuing_country": "ARE",
+                                    "dob_readable": "27.06.1994",
+                                    "dob_raw": "940627",
+                                    "raw_result": "ILARE1441202103784199493910329<<<<<<9406270M2703165IND<<<<<<<<<<4<<<<<<<MOHAMMEDKUNHI<<SHAJAHAN<ABDULR<<<<<<",
+                                    "optionals": "784199493910329 4",
+                                    "expiration_date_raw": "270316",
+                                    "expiration_date_readable": "16.03.2027",
+                                    "nationality": "IND",
+                                    "document_number": "144120210",
+                                    "sex": "M",
+                                    "given_names_readable": "SHAJAHAN ABDULR",
+                                    "surname": "MOHAMMEDKUNHI",
+                                    "document_type_readable": "IL",
+                                    "document_type_raw": "IL"
+                                  }
+                                },
+                                "extraField": "567",
+                                "secondExtraField": "Accounts",
+                                "thirdExtraField": "007",
+                                "isHostMobilePhoneEnter": false,
+                                "message": "SHAJAHAN ABDULR MOHAMMEDKUNHI entered the unit F&B",
+                                "date": {
+                                  "$date": "2025-09-29T07:58:32.622Z"
+                                },
+                                "createdAt": {
+                                  "$date": "2025-09-29T07:58:32.625Z"
+                                },
+                                "updatedAt": {
+                                  "$date": "2025-09-29T08:21:07.863Z"
+                                },
+                                "__v": 0
+                              }"""
+                        },
+                        {
+                            "role": "assistant",
+                            "content": "SHAJAHAN ABDULR MOHAMMEDKUNHI entered the unit F&B on 2025-09-29 using Emirates ID yesterday He was born on 27.06.1994"
                         }
-                    },
-                    "required_fields": ["type", "leaveType", "date"]
+                    ]
                 },
-                {
-                    "role": "assistant",
-                    "content_must_include": ["check", "out", "manual", "yesterday"],
-                    "content_must_not_include": ["error"]
-                }
-            ]
-        },
-        metadata={'difficulty': 'easy'},
-    ),
-    
-    Case(
-        name='check_ins_last_week_all_methods',
-        inputs='Show me all check-ins from last week regardless of entry method (today is 2025-05-26).',
-        expected_output={
-            "conversation": [
-                {
-                    "role": "user",
-                    "content": "Show me all check-ins from last week regardless of entry method (today is 2025-05-26)."
+                metadata={'difficulty': 'easy'},
+            ),
+            
+            Case(
+                name='deliveries_today_amazon',
+                inputs={
+                  "text": f'Show all Amazon deliveries received today.',
+                  "today_date": '2025-01-27'
                 },
-                {
-                    "role": "tool_call",
-                    "tool": "find",
-                    "arguments": {
-                        "database": "buzzin-api-staging",
-                        "collection": "events",
-                        "filter": {
-                            "type": "enterEvents",
-                            "date": {
-                                "$gte": {"$date": "2025-05-19T00:00:00.000Z"},
-                                "$lt": {"$date": "2025-05-26T00:00:00.000Z"}
-                            }
+                expected_output={
+                    "conversation": [
+                        {
+                            "role": "tool_call",
+                            "tool": "find",
+                            "arguments": {
+                                "database": "buzzin-api-staging",
+                                "collection": "events",
+                                "filter": {
+                                    "type": "deliveryEvents",
+                                    "companyId": {"$oid": "6159af2a99e90e0013e5f071"},
+                                    "date": {
+                                        "$gte": "<today - start of day>",
+                                        "$lt": "<today - end of day>"
+                                    }
+                                }
+                            },
+                            "obtained_data": """{
+                                "_id": {
+                                  "$oid": "679768b2e4a7880011092fc9"
+                                },
+                                "left": true,
+                                "additionalFlatsIds": [],
+                                "type": "deliveryEvents",
+                                "propertyId": {
+                                  "$oid": "60ae026077dba90011862dfc"
+                                },
+                                "flatId": {
+                                  "$oid": "64098199c9d51b00129c9474"
+                                },
+                                "hostId": {
+                                  "$oid": "66f526173eba5a0012a23b42"
+                                },
+                                "companyId": {
+                                  "$oid": "6159af2a99e90e0013e5f071"
+                                },
+                                "delivererId": {
+                                  "$oid": "66f526173eba5a0012a23b42"
+                                },
+                                "deviceId": {
+                                  "$oid": "60f003b02485680011207c7d"
+                                },
+                                "delivererName": "SURINDER RAM",
+                                "delivererMobileNumber": "+971505117487",
+                                "emiratesData": {
+                                  "mrzData": {
+                                    "raw_result": "IDKWTK170481362296031802642<<<9603183M2002178IND14196366<<<5RAM<<SURINDER<<<<<<<<<<<<<<<<<",
+                                    "optionals": "296031802642 14196366",
+                                    "est_issuing_date_readable": "Unknown",
+                                    "expiration_date_raw": "200217",
+                                    "est_issuing_date_raw": "",
+                                    "issuing_country": "KWT",
+                                    "dob_readable": "18.03.1996",
+                                    "dob_raw": "960318",
+                                    "expiration_date_readable": "17.02.2020",
+                                    "nationality": "IND",
+                                    "document_number": "K17048136",
+                                    "sex": "M",
+                                    "surname": "RAM",
+                                    "given_names_readable": "SURINDER",
+                                    "document_type_readable": "ID",
+                                    "document_type_raw": "ID"
+                                  }
+                                },
+                                "extraField": "123",
+                                "secondExtraField": "Visitor",
+                                "message": "New delivery from Amazon delivered by SURINDER RAM to unit 27",
+                                "date": {
+                                  "$date": "2025-01-27T11:06:26.858Z"
+                                },
+                                "createdAt": {
+                                  "$date": "2025-01-27T11:06:26.859Z"
+                                },
+                                "updatedAt": {
+                                  "$date": "2025-01-27T12:05:50.560Z"
+                                },
+                                "__v": 0
+                              }"""
+                        },
+                        {
+                            "role": "assistant",
                         }
-                    },
-                    "required_fields": ["type", "date"],
-                    "must_not_have": ["entryType"]  # Should NOT filter by entry method
+                    ]
                 },
-                {
-                    "role": "assistant",
-                    "content_must_include": ["check-in", "last week"],
-                    "content_must_not_include": ["error"]
-                }
-            ]
-        },
-        metadata={'difficulty': 'easy'},
-    ),
-]
+                metadata={'difficulty': 'medium'},
+            ),
+            
+            Case(
+                name='check_outs_manual_yesterday',
+                inputs={
+                  "text": f'List visitors who checked out manually yesterday.',
+                  "today_date": '2025-09-30'
+                },
+                expected_output={
+                    "conversation": [
+                        {
+                            "role": "tool_call",
+                            "tool": "find",
+                            "arguments": {
+                                "database": "buzzin-api-staging",
+                                "collection": "events",
+                                "filter": {
+                                    "type": "leaveEvents",
+                                    "leaveType": "manualExit",
+                                    "date": {
+                                        "$gte": "<yesterday - start of day>",
+                                        "$lt": "<yesterday - end of day>"
+                                    }
+                                }
+                            },
+                            "obtained_data": """{
+                                "_id": {
+                                  "$oid": "68da3b345a0387001217efd0"
+                                },
+                                "type": "leaveEvents",
+                                "guestName": "Innocent ",
+                                "thirdExtraField": "788",
+                                "propertyId": {
+                                  "$oid": "60ae026077dba90011862dfc"
+                                },
+                                "flatId": {
+                                  "$oid": "641418c04edebf0012d5db93"
+                                },
+                                "hostId": {
+                                  "$oid": "67875b78450a3200118e7b43"
+                                },
+                                "deviceId": {
+                                  "$oid": "68a45ec154ddb0bd2803a428"
+                                },
+                                "leaveType": "manualExit",
+                                "duration": 72652,
+                                "message": "Innocent  left the unit 667",
+                                "date": {
+                                  "$date": "2025-09-29T07:54:28.415Z"
+                                },
+                                "createdAt": {
+                                  "$date": "2025-09-29T07:54:28.416Z"
+                                },
+                                "updatedAt": {
+                                  "$date": "2025-09-29T07:54:28.416Z"
+                                },
+                                "__v": 0
+                              }"""
+                        },
+                        {
+                            "role": "assistant",
+                        }
+                    ]
+                },
+                metadata={'difficulty': 'easy'},
+            ),
+            
+            Case(
+                name='check_ins_last_week_all_methods',
+                inputs={
+                  "text": f'Show me all check-ins from previous week regardless of entry method.',
+                  "today_date": '2025-10-14'
+                },
+                expected_output={
+                    "conversation": [
+                        {
+                            "role": "tool_call",
+                            "tool": "find",
+                            "arguments": {
+                                "database": "buzzin-api-staging",
+                                "collection": "events",
+                                "filter": {
+                                    "type": "enterEvents",
+                                    "date": {
+                                        "$gte": "<week - start of week (monday)>",
+                                        "$lt": "<week - end of week (sunday)>"
+                                    }
+                                }
+                            },
+                            "obtained_data": """
+                            - SHAJAHAN ABDULR MOHAMMEDKUNHI entered the unit HR on 2025-10-09
+                            - SHAJAHAN ABDULR MOHAMMEDKUNHI entered the unit 667 on 2025-10-09
+                            - Joji entered the unit 667 on 2025-10-09
 
-class VerboseLLMJudge(LLMJudge):
-    """
-    LLMJudge that prints what data it receives and its evaluation results.
-    """
+                            (plus full data for each event)
+                            """
+                        },
+                        {
+                            "role": "assistant",
+                            "content": """
+                            - SHAJAHAN ABDULR MOHAMMEDKUNHI entered the unit HR on 2025-10-09
+                            - SHAJAHAN ABDULR MOHAMMEDKUNHI entered the unit 667 on 2025-10-09
+                            - Joji entered the unit 667 on 2025-10-09
+                            """
+                        }
+                    ]
+                },
+                metadata={'difficulty': 'easy'},
+            ),
+        ]
+    
+    def build(self) -> Dataset:
+        return Dataset(cases=self.cases, evaluators=[
+            LLMJudge(
+                rubric="Output and Expected Output's find query and filter should be equivalent and include the same values. Formating of dates, can be different, but only dates",
+                model="openai:gpt-4o",
+                include_input=True,
+            ),
+            LLMJudge(
+                rubric="The obtained_data of the find query should be equivalent to the expected_output' obtained_data of the find query. Both should return the same documents, no less, no more. Only thing that can differ is formating. The format of the dates can be different, but only dates",
+                model="openai:gpt-4o",
+                include_input=True,
+            )
+        ])
 
-    async def evaluate(self, ctx: EvaluatorContext) -> float:
-        """Override evaluate to add debug logging."""
-        print("\n" + "=" * 80)
-        print("DEBUG: DATA RECEIVED BY LLM JUDGE")
-        print("=" * 80)
-        
-        print("\n[INPUTS]:")
-        print(f"  Type: {type(ctx.inputs)}")
-        print(f"  Value: {ctx.inputs}")
-        
-        print("\n[OUTPUT from ai_mongo_conversation]:")
-        print(f"  Type: {type(ctx.output)}")
-        if isinstance(ctx.output, dict):
-            print(f"  Keys: {list(ctx.output.keys())}")
-            print("\n  Content:")
-            for key, value in ctx.output.items():
-                if key == 'iterations':
-                    print(f"    {key}: {len(value)} iterations")
-                    for i, iteration in enumerate(value, 1):
-                        print(f"      Iteration {i}:")
-                        print(f"        - tool_calls: {len(iteration.get('tool_calls', []))}")
-                        if iteration.get('final_answer'):
-                            print(f"        - final_answer: {iteration.get('final_answer')[:100]}...")
-                elif key == 'final_answer':
-                    print(f"    {key}: {value}")
-                else:
-                    print(f"    {key}: {value}")
-        else:
-            print(f"  Value: {ctx.output}")
-        
-        print("\n[EXPECTED_OUTPUT]:")
-        print(f"  Type: {type(ctx.expected_output)}")
-        if isinstance(ctx.expected_output, dict):
-            print(f"  Keys: {list(ctx.expected_output.keys())}")
-            if 'conversation' in ctx.expected_output:
-                conv = ctx.expected_output['conversation']
-                print(f"  Conversation has {len(conv)} steps")
-                for i, step in enumerate(conv, 1):
-                    role = step.get('role', 'unknown')
-                    print(f"    Step {i} - {role}:")
-                    if role == 'assistant':
-                        print(f"      Expected content: {step.get('content', 'N/A')}")
-                    elif role == 'tool_call':
-                        print(f"      Tool: {step.get('tool', 'N/A')}")
-                        print(f"      Tool arguments: {step.get('arguments', 'N/A')}")
-        else:
-            print(f"  Value: {ctx.expected_output}")
-        
-        print("\n" + "=" * 80)
-        print("CALLING PARENT LLMJudge.evaluate()...")
-        print("=" * 80)
-        
-        # Call the parent evaluate method
-        score = await super().evaluate(ctx)
-        
-        print("\n" + "=" * 80)
-        print("LLM JUDGE RESULT")
-        print("=" * 80)
-        print(f"Score: {score}")
-        print("=" * 80 + "\n")
-        
-        return score
 
 # Create dataset with conversation-based evaluator
-dataset = Dataset(cases=cases[:1], 
-    evaluators=[VerboseLLMJudge(
-        rubric="Output and Expected Output should represent the same answer, even if the tool calls don't match exactly, the final assistant answer must be simillar and explaining the same info",
-        model="openai:gpt-4o-mini",
-        include_input=True,
-        include_expected_output=True
-    )]
-)
-
+dataset = DatasetBuilder(today=today).build()
 
 # Wrapper function for evaluation
-def ai_mongo_conversation(user_query: str) -> dict:
+def ai_mongo_conversation(user_query: Dict[str, Any]) -> dict:
     """
     AI function that returns full conversation including iterations.
     """
+
+    # Pass date from input (dict) to agent, remove from query
+    # Add more queries to the agent
+    # Add expected output of find mongodb queries - separate llm judge
+
     agent = MongoDBAgent()
     result = agent.query_sync(user_query)
-    return result  # Returns dict with 'iterations', 'collection', 'filter', 'final_answer'
+
+    # print('user_query', user_query)
+    # print('\n\nresult: \n', result)
+    
+    return result
 
 
 # Example usage:
